@@ -1,0 +1,149 @@
+{
+  "version": "3.0.0",
+
+  "metadata": {
+    "id": "extension-aws",
+    "name": "AWS Infrastructure",
+    "kind": "extension",
+    "layers": ["ops"],
+    "type": "aws",
+    "description": "Complete AWS infrastructure setup with Terraform, EC2 deployment, and multi-environment support",
+    "version": "1.0.0",
+    "author": "Genesis Team",
+    "tags": ["aws", "terraform", "infrastructure", "ec2", "ops"]
+  },
+
+  "fields": [
+    {
+      "key": "awsRegion",
+      "label": "AWS Region",
+      "type": "select",
+      "options": ["us-east-1", "us-west-2", "eu-west-1", "ap-southeast-1"],
+      "default": "us-east-1",
+      "required": true,
+      "description": "AWS region for deployment",
+      "category": "infrastructure"
+    },
+    {
+      "key": "awsAccountId",
+      "label": "AWS Account ID",
+      "type": "text",
+      "default": "",
+      "required": true,
+      "description": "AWS account ID for resource deployment",
+      "category": "infrastructure"
+    },
+    {
+      "key": "instanceType",
+      "label": "EC2 Instance Type",
+      "type": "select",
+      "options": ["t2.nano", "t2.micro", "t2.small", "t2.medium"],
+      "default": "t2.micro",
+      "required": true,
+      "description": "EC2 instance type for application servers",
+      "category": "infrastructure"
+    },
+    {
+      "key": "databaseClass",
+      "label": "RDS Instance Class",
+      "type": "select",
+      "options": ["db.t3.micro", "db.t3.small", "db.t3.medium"],
+      "default": "db.t3.micro",
+      "required": false,
+      "description": "RDS database instance class",
+      "category": "infrastructure"
+    }
+  ],
+
+  "files": [
+    "ops/terraform/main.tf.mustache",
+    "ops/terraform/variables.tf.mustache",
+    "ops/terraform/outputs.tf.mustache",
+    "ops/terraform/networking.tf.mustache",
+    "ops/terraform/security.tf.mustache",
+    "ops/terraform/compute.tf.mustache",
+    "ops/terraform/database.tf.mustache",
+    "ops/terraform/s3.tf.mustache",
+    "ops/terraform/load_balancer.tf.mustache",
+    "ops/terraform/certificate.tf.mustache",
+    "ops/terraform/cloudfront.tf.mustache",
+    "ops/terraform/user_data.sh.mustache",
+    "ops/terraform/backend-{{environment}}.hcl.mustache",
+    "ops/terraform/bootstrap/main.tf.mustache",
+    "ops/terraform/bootstrap/variables.tf.mustache",
+    "ops/terraform/environments/dev.tfvars.mustache",
+    "ops/terraform/environments/staging.tfvars.mustache",
+    "ops/terraform/environments/prod.tfvars.mustache",
+    "ops/ec2-setup/init.sh.mustache",
+    "ops/ec2-setup/cleanup.sh.mustache",
+    "ops/ec2-setup/restart.sh.mustache",
+    "ops/ec2-setup/status.sh.mustache",
+    "ops/ssh-keys/.gitkeep.mustache"
+  ],
+
+  "runtimeConfigTemplate": [
+    {
+      "key": "AWS_REGION",
+      "description": "AWS region for deployment",
+      "example": "{{awsRegion}}",
+      "required": true,
+      "secret": false,
+      "targets": ["ops"]
+    },
+    {
+      "key": "AWS_ACCOUNT_ID",
+      "description": "AWS account ID",
+      "example": "{{awsAccountId}}",
+      "required": true,
+      "secret": false,
+      "targets": ["ops"]
+    },
+    {
+      "key": "TF_STATE_BUCKET",
+      "description": "S3 bucket for Terraform state",
+      "example": "{{projectName}}-terraform-state",
+      "required": true,
+      "secret": false,
+      "targets": ["ops"]
+    },
+    {
+      "key": "TF_STATE_KEY",
+      "description": "S3 key for Terraform state file",
+      "example": "{{projectName}}/{{currentEnv}}/terraform.tfstate",
+      "required": true,
+      "secret": false,
+      "targets": ["ops"]
+    }
+  ],
+
+  "generation": {
+    "files": {
+      "remove": []
+    },
+    "layers": {
+      "ops": {}
+    },
+    "postProcess": [
+      {
+        "type": "chmod",
+        "pattern": "ops/**/*.sh",
+        "mode": "+x"
+      }
+    ]
+  },
+
+  "environments": {
+    "dev": {
+      "instanceType": "t2.nano",
+      "databaseClass": "db.t3.micro"
+    },
+    "staging": {
+      "instanceType": "t2.micro",
+      "databaseClass": "db.t3.micro"
+    },
+    "prod": {
+      "instanceType": "t2.small",
+      "databaseClass": "db.t3.small"
+    }
+  }
+}

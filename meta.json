@@ -13,7 +13,7 @@
     "tags": ["aws", "terraform", "infrastructure", "ec2", "ops"]
   },
 
-  "fields": [
+  "scaffoldConfigTemplate": [
     {
       "key": "awsRegion",
       "label": "AWS Region",

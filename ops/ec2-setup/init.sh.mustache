@@ -161,6 +161,21 @@ else
     echo "No Spring profile specified, defaulting to production"
 fi
 
+# Read extension-required Spring profiles from genesis3.json
+EXTENSION_PROFILES=""
+if [ -f "/opt/{{backendModule.name}}/ec2-setup/genesis3.json" ]; then
+    echo "📋 Reading extension profiles from genesis3.json..."
+    EXTENSION_PROFILES=$(jq -r '.springProfiles // [] | join(",")' /opt/{{backendModule.name}}/ec2-setup/genesis3.json)
+    if [ -n "$EXTENSION_PROFILES" ]; then
+        echo "✅ Found extension profiles: $EXTENSION_PROFILES"
+    else
+        echo "ℹ️ No extension profiles found in genesis3.json"
+    fi
+else
+    echo "⚠️ genesis3.json not found at /opt/{{backendModule.name}}/ec2-setup/genesis3.json"
+    echo "ℹ️ Continuing without extension profiles"
+fi
+
 # Single secret name for all application and database secrets
 APP_SECRET_NAME="{{projectName}}-${ENV_FOR_SECRET}-app-secrets"
 echo "Looking for application secrets: $APP_SECRET_NAME"
@@ -169,12 +184,25 @@ echo "Looking for application secrets: $APP_SECRET_NAME"
 echo "Creating Spring environment configuration..."
 TEMP_SPRING_ENV="/tmp/spring.env.$$"
 
-# Add Spring profile
+# Build complete Spring profiles list (environment + extensions)
 if [ -n "$SPRING_PROFILE" ]; then
-    echo "SPRING_PROFILES_ACTIVE=$SPRING_PROFILE" > "$TEMP_SPRING_ENV"
+    BASE_PROFILE="$SPRING_PROFILE"
 else
-    echo "SPRING_PROFILES_ACTIVE=production" > "$TEMP_SPRING_ENV"
+    BASE_PROFILE="production"
 fi
+
+if [ -n "$EXTENSION_PROFILES" ]; then
+    # Combine environment profile with extension profiles
+    SPRING_PROFILES_ACTIVE="${BASE_PROFILE},${EXTENSION_PROFILES}"
+    echo "📋 Spring profiles: ${BASE_PROFILE} (environment) + ${EXTENSION_PROFILES} (extensions)"
+else
+    # Only environment profile
+    SPRING_PROFILES_ACTIVE="$BASE_PROFILE"
+    echo "📋 Spring profiles: ${BASE_PROFILE} (environment only)"
+fi
+
+echo "SPRING_PROFILES_ACTIVE=$SPRING_PROFILES_ACTIVE" > "$TEMP_SPRING_ENV"
+echo "✅ Set SPRING_PROFILES_ACTIVE=$SPRING_PROFILES_ACTIVE"
 
 # Fetch secrets from AWS Secrets Manager
 echo "=== Fetching secrets from AWS Secrets Manager ==="

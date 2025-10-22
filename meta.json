@@ -55,67 +55,6 @@
     }
   ],
 
-  "files": [
-    "ops/terraform/main.tf.mustache",
-    "ops/terraform/variables.tf.mustache",
-    "ops/terraform/outputs.tf.mustache",
-    "ops/terraform/networking.tf.mustache",
-    "ops/terraform/security.tf.mustache",
-    "ops/terraform/compute.tf.mustache",
-    "ops/terraform/database.tf.mustache",
-    "ops/terraform/s3.tf.mustache",
-    "ops/terraform/load_balancer.tf.mustache",
-    "ops/terraform/certificate.tf.mustache",
-    "ops/terraform/cloudfront.tf.mustache",
-    "ops/terraform/user_data.sh.mustache",
-    "ops/terraform/backend-{{environment}}.hcl.mustache",
-    "ops/terraform/bootstrap/main.tf.mustache",
-    "ops/terraform/bootstrap/variables.tf.mustache",
-    "ops/terraform/environments/dev.tfvars.mustache",
-    "ops/terraform/environments/staging.tfvars.mustache",
-    "ops/terraform/environments/prod.tfvars.mustache",
-    "ops/ec2-setup/init.sh.mustache",
-    "ops/ec2-setup/cleanup.sh.mustache",
-    "ops/ec2-setup/restart.sh.mustache",
-    "ops/ec2-setup/status.sh.mustache",
-    "ops/ssh-keys/.gitkeep.mustache"
-  ],
-
-  "runtimeConfigTemplate": [
-    {
-      "key": "AWS_REGION",
-      "description": "AWS region for deployment",
-      "example": "{{awsRegion}}",
-      "required": true,
-      "secret": false,
-      "targets": ["ops"]
-    },
-    {
-      "key": "AWS_ACCOUNT_ID",
-      "description": "AWS account ID",
-      "example": "{{awsAccountId}}",
-      "required": true,
-      "secret": false,
-      "targets": ["ops"]
-    },
-    {
-      "key": "TF_STATE_BUCKET",
-      "description": "S3 bucket for Terraform state",
-      "example": "{{projectName}}-terraform-state",
-      "required": true,
-      "secret": false,
-      "targets": ["ops"]
-    },
-    {
-      "key": "TF_STATE_KEY",
-      "description": "S3 key for Terraform state file",
-      "example": "{{projectName}}/{{currentEnv}}/terraform.tfstate",
-      "required": true,
-      "secret": false,
-      "targets": ["ops"]
-    }
-  ],
-
   "generation": {
     "files": {
       "remove": []
@@ -145,5 +84,23 @@
       "instanceType": "t2.small",
       "databaseClass": "db.t3.small"
     }
-  }
+  },
+
+  "gitignore": [
+    "# Terraform",
+    ".terraform/",
+    "*.tfstate",
+    "*.tfstate.*",
+    ".terraform.lock.hcl",
+    "*.tfvars",
+    "!terraform/environments/*.tfvars",
+    "",
+    "# AWS",
+    "*.pem",
+    "*.key",
+    "",
+    "# SSH Keys",
+    "ssh-keys/*",
+    "!ssh-keys/.gitkeep"
+  ]
 }
